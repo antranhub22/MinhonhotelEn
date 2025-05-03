@@ -562,3 +562,18 @@ export async function generateCallSummary(transcripts: Array<{role: string, cont
     return basicSummary;
   }
 }
+
+/**
+ * Tách từ một câu bất kỳ bằng OpenAI, trả về chuỗi các từ cách nhau bởi dấu cách.
+ */
+export async function segmentTextWithOpenAI(text: string): Promise<string> {
+  const prompt = `Hãy tách câu sau thành các từ, mỗi từ cách nhau bởi dấu cách. Chỉ trả về kết quả, không giải thích thêm.\n${text}`;
+  const response = await openai.chat.completions.create({
+    model: 'gpt-4.1-nano',
+    messages: [
+      { role: 'system', content: 'Bạn là một công cụ tách từ thông minh, chỉ trả về kết quả tách từ.' },
+      { role: 'user', content: prompt }
+    ]
+  });
+  return response.choices[0]?.message?.content?.trim() || '';
+}
