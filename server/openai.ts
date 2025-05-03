@@ -374,7 +374,7 @@ export async function extractServiceRequests(summary: string): Promise<ServiceRe
     try {
       const options = { timeout: 20000, headers: { 'OpenAi-Project': projectId } };
       const response = await openai.chat.completions.create({
-        model: "gpt-4o",
+        model: "gpt-4.1-nano",
         messages: [
           { role: "system", content: "You are a precise hotel service data extraction specialist that outputs structured JSON only." },
           { role: "user", content: prompt }
@@ -456,7 +456,7 @@ export async function translateToVietnamese(text: string): Promise<string> {
     `;
 
     const chatCompletion = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-4.1-nano",
       messages: [
         { role: "system", content: "Bạn là một chuyên gia dịch thuật chuyên nghiệp cho khách sạn, dịch từ tiếng Anh sang tiếng Việt." },
         { role: "user", content: prompt }
@@ -523,14 +523,14 @@ export async function generateCallSummary(transcripts: Array<{role: string, cont
       Summary:
     `;
 
-    // Call the OpenAI API with GPT-4o
+    // Call the OpenAI API with GPT-4.1-nano
     const options = {
       timeout: 30000, // 30 second timeout to prevent hanging
       headers: { 'OpenAi-Project': projectId }
     };
     
     const chatCompletion = await openai.chat.completions.create({
-      model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+      model: "gpt-4.1-nano",
       messages: [
         { role: "system", content: "You are a professional hotel service summarization specialist who creates concise and useful summaries." },
         { role: "user", content: prompt }
