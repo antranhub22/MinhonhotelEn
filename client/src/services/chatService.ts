@@ -1,5 +1,3 @@
-import { ChatCompletionMessage } from 'openai';
-
 // Load the system prompt from environment or inline it here
 const SYSTEM_PROMPT = `FIRST MESSAGE: HI! Hotel ! HOW MAY I ASSIST YOU TODAY ?
 [Role]
@@ -22,26 +20,5 @@ Core Responsibilities:
 ... (rest of the full prompt content) ...
 `;
 
-export async function fetchAIResponse(userMessage: string): Promise<string> {
-  const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
-  const url = 'https://api.openai.com/v1/chat/completions';
-  const messages: ChatCompletionMessage[] = [
-    { role: 'system', content: SYSTEM_PROMPT },
-    { role: 'user', content: userMessage }
-  ];
-
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${OPENAI_API_KEY}`
-    },
-    body: JSON.stringify({
-      model: 'gpt-3.5-turbo',
-      messages
-    })
-  });
-
-  const data = await response.json();
-  return data.choices?.[0]?.message?.content ?? "I'm sorry, I encountered an error.";
-} 
+// TODO: Chuyển toàn bộ logic AI sang gọi API server nếu cần.
+// File này đã xóa toàn bộ logic gọi trực tiếp OpenAI và các tham chiếu liên quan. 

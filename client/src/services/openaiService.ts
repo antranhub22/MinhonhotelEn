@@ -1,6 +1,3 @@
-import OpenAI from 'openai';
-import type { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
-
 // Initialize OpenAI client
 const openai = new OpenAI({ apiKey: import.meta.env.VITE_OPENAI_API_KEY });
 
@@ -51,17 +48,16 @@ export async function getAIChatResponse(userMessage: string, context?: string): 
 }
 
 /**
- * Tách từ một câu bất kỳ bằng OpenAI, trả về chuỗi các từ cách nhau bởi dấu cách.
+ * Tách từ một câu bất kỳ bằng OpenAI qua server API, trả về chuỗi các từ cách nhau bởi dấu cách.
  * @param inputText Chuỗi cần tách từ
  */
 export async function segmentTextWithOpenAI(inputText: string): Promise<string> {
-  const prompt = `Hãy tách câu sau thành các từ, mỗi từ cách nhau bởi dấu cách. Chỉ trả về kết quả, không giải thích thêm.\n${inputText}`;
-  const response = await openai.chat.completions.create({
-    model: 'gpt-3.5-turbo',
-    messages: [
-      { role: 'system', content: 'Bạn là một công cụ tách từ thông minh, chỉ trả về kết quả tách từ.' },
-      { role: 'user', content: prompt }
-    ]
+  const response = await fetch('/api/segment-text', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text: inputText })
   });
-  return response.choices[0]?.message?.content?.trim() || '';
+  if (!response.ok) throw new Error('Failed to segment text with OpenAI');
+  const data = await response.json();
+  return data.segmented || '';
 } 
