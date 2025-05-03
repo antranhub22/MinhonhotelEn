@@ -4,6 +4,7 @@ import Reference from './Reference';
 import SiriCallButton from './SiriCallButton';
 import { referenceService, ReferenceItem } from '@/services/ReferenceService';
 import { processText, applySmartSpacing } from '../utils/textProcessing';
+import { segmentTextWithOpenAI } from '../services/openaiService';
 
 interface Interface2Props {
   isActive: boolean;
@@ -51,6 +52,9 @@ const Interface2: React.FC<Interface2Props> = ({ isActive }) => {
   
   // Local duration state for backup timer functionality
   const [localDuration, setLocalDuration] = useState(0);
+  
+  // Thêm state để lưu kết quả tách từ OpenAI cho từng message
+  const [openAISegments, setOpenAISegments] = useState<{ [id: string]: string }>({});
   
   const conversationRef = useRef<HTMLDivElement>(null);
 
@@ -164,6 +168,17 @@ const Interface2: React.FC<Interface2Props> = ({ isActive }) => {
     return () => cleanupAnimations();
   }, [conversationTurns]);
 
+  // Hàm gọi OpenAI để tách từ cho assistant message
+  const fetchOpenAISegmented = useCallback(async (msgId: string, content: string) => {
+    if (openAISegments[msgId] !== undefined) return; // Đã có kết quả
+    try {
+      const segmented = await segmentTextWithOpenAI(content);
+      setOpenAISegments(prev => ({ ...prev, [msgId]: segmented }));
+    } catch (e) {
+      setOpenAISegments(prev => ({ ...prev, [msgId]: content })); // fallback
+    }
+  }, [openAISegments]);
+
   // Handler for Cancel button - End call and go back to interface1
   const handleCancel = useCallback(() => {
     // Capture the current duration for the email
@@ -271,16 +286,19 @@ const Interface2: React.FC<Interface2Props> = ({ isActive }) => {
                       <p className="text-xl font-semibold text-yellow-200">
                         <span className="inline-flex flex-wrap">
                           {turn.messages.map((msg, idx) => {
-                            // Đảm bảo content là string
                             const content = typeof msg.content === 'string' ? msg.content : '';
-                            // Tách từ và ghép lại
-                            const { words } = processText(content);
-                            const processedContent = applySmartSpacing(words);
-                            // Log kiểm tra
-                            console.log('DEBUG segmented:', processedContent);
-                            // Hiệu ứng typewriter
-                            const needsSpaceBefore = idx > 0 && !processedContent.startsWith(',') && !processedContent.startsWith('.') && !processedContent.startsWith('?') && !processedContent.startsWith('!');
-                            const visibleContent = processedContent.slice(0, visibleChars[msg.id] || 0);
+                            // Nếu là assistant, thử tách từ bằng OpenAI
+                            let displayContent = content;
+                            if (turn.role === 'assistant') {
+                              if (openAISegments[msg.id] !== undefined) {
+                                displayContent = openAISegments[msg.id];
+                              } else {
+                                // Gọi OpenAI tách từ bất đồng bộ
+                                fetchOpenAISegmented(msg.id, content);
+                              }
+                            }
+                            const needsSpaceBefore = idx > 0 && !displayContent.startsWith(',') && !displayContent.startsWith('.') && !displayContent.startsWith('?') && !displayContent.startsWith('!');
+                            const visibleContent = displayContent.slice(0, visibleChars[msg.id] || 0);
                             return (
                               <span key={msg.id}>
                                 {needsSpaceBefore ? ' ' : ''}

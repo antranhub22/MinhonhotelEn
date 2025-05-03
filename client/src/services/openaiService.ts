@@ -48,4 +48,20 @@ export async function getAIChatResponse(userMessage: string, context?: string): 
     messages: messages
   });
   return response.choices[0]?.message?.content || "I'm sorry, I encountered an error processing your request.";
+}
+
+/**
+ * Tách từ một câu bất kỳ bằng OpenAI, trả về chuỗi các từ cách nhau bởi dấu cách.
+ * @param inputText Chuỗi cần tách từ
+ */
+export async function segmentTextWithOpenAI(inputText: string): Promise<string> {
+  const prompt = `Hãy tách câu sau thành các từ, mỗi từ cách nhau bởi dấu cách. Chỉ trả về kết quả, không giải thích thêm.\n${inputText}`;
+  const response = await openai.chat.completions.create({
+    model: 'gpt-3.5-turbo',
+    messages: [
+      { role: 'system', content: 'Bạn là một công cụ tách từ thông minh, chỉ trả về kết quả tách từ.' },
+      { role: 'user', content: prompt }
+    ]
+  });
+  return response.choices[0]?.message?.content?.trim() || '';
 } 
