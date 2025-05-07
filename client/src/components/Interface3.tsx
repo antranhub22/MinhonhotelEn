@@ -458,7 +458,7 @@ const Interface3: React.FC<Interface3Props> = ({ isActive }) => {
                   <button className="h-10 px-3 bg-[#ffe082] hover:bg-[#ffe9b3] text-blue-900 rounded-full text-xs font-semibold shadow transition-colors flex-1" onClick={handleAddNote} disabled={!note.trim()}>Add Note</button>
                   <div className="flex items-center space-x-2 w-full justify-center">
                     <label className="text-xs text-gray-600 font-medium">Room</label>
-                    <input type="text" className="w-16 p-2 border border-white/30 rounded-xl focus:ring-2 focus:ring-[#d4af37] focus:border-[#d4af37] bg-white/70 text-gray-900 font-semibold text-xs" value={orderSummary.roomNumber} onChange={(e) => handleInputChange('roomNumber', e.target.value)} />
+                    <input type="text" placeholder="Auto-filled from conversation (or type here)" className="w-16 p-2 border border-white/30 rounded-xl focus:ring-2 focus:ring-[#d4af37] focus:border-[#d4af37] bg-white/70 text-gray-900 font-semibold text-xs" value={orderSummary.roomNumber} onChange={(e) => handleInputChange('roomNumber', e.target.value)} />
                   </div>
                   <button className="h-10 px-3 bg-white/70 text-blue-900 rounded-full text-xs font-semibold border border-white/30 shadow flex items-center justify-center" onClick={() => setCurrentInterface('interface3vi')}>
                     <span className="material-icons text-base">language</span>
@@ -485,7 +485,7 @@ const Interface3: React.FC<Interface3Props> = ({ isActive }) => {
                 <button className="h-10 px-3 sm:px-4 bg-[#ffe082] hover:bg-[#ffe9b3] text-blue-900 rounded-full text-xs sm:text-sm font-semibold shadow transition-colors" onClick={handleAddNote} disabled={!note.trim()}>Add Note</button>
                 <div className="flex items-center space-x-2 w-full justify-center">
                   <label className="text-xs sm:text-base text-gray-600 font-medium">Room</label>
-                  <input type="text" className="w-16 sm:w-32 p-2 border border-white/30 rounded-xl focus:ring-2 focus:ring-[#d4af37] focus:border-[#d4af37] bg-white/70 text-gray-900 font-semibold text-xs sm:text-base" value={orderSummary.roomNumber} onChange={(e) => handleInputChange('roomNumber', e.target.value)} />
+                  <input type="text" placeholder="Auto-filled from conversation (or type here)" className="w-16 sm:w-32 p-2 border border-white/30 rounded-xl focus:ring-2 focus:ring-[#d4af37] focus:border-[#d4af37] bg-white/70 text-gray-900 font-semibold text-xs sm:text-base" value={orderSummary.roomNumber} onChange={(e) => handleInputChange('roomNumber', e.target.value)} />
                 </div>
                 <button className="h-10 px-3 sm:px-4 bg-white/70 text-blue-900 rounded-full text-xs sm:text-sm font-semibold border border-white/30 shadow flex items-center justify-center" onClick={() => setCurrentInterface('interface3vi')}>
                   <span className="material-icons text-base">language</span>
