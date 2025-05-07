@@ -13,6 +13,7 @@ import axios from "axios";
 import { Reference, IReference } from './models/Reference';
 import express, { type Request, Response } from 'express';
 import { verifyJWT } from './middleware/auth';
+import jwt from 'jsonwebtoken';
 
 // Initialize OpenAI client 
 const openai = new OpenAI({
@@ -974,6 +975,31 @@ Mi Nhon Hotel Mui Ne`
     } catch (error) {
       console.error('Invalid REFERENCE_MAP env var:', error);
       res.status(500).json({ error: 'Invalid REFERENCE_MAP JSON' });
+    }
+  });
+
+  // Đăng nhập staff đơn giản
+  app.post('/api/staff/login', async (req, res) => {
+    try {
+      console.log('[LOGIN] Body:', req.body);
+      const { username, password } = req.body;
+      if (username === 'Staff' && password === '1234') {
+        const secret = process.env.JWT_SECRET;
+        if (!secret) {
+          console.error('[LOGIN] JWT secret not configured');
+          return res.status(500).json({ message: 'JWT secret not configured' });
+        }
+        // Tạo payload đơn giản
+        const token = jwt.sign({ username: 'Staff', role: 'staff' }, secret, { expiresIn: '12h' });
+        console.log('[LOGIN] Success, token created');
+        return res.json({ token });
+      } else {
+        console.warn('[LOGIN] Invalid username or password');
+        return res.status(401).json({ message: 'Invalid username or password' });
+      }
+    } catch (err) {
+      console.error('[LOGIN] Exception:', err);
+      return res.status(500).json({ message: 'Internal server error', error: err?.message });
     }
   });
 
