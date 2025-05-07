@@ -11,6 +11,7 @@ import { useWebSocket } from '@/hooks/useWebSocket';
 // Lazy-loaded components
 const CallHistory = React.lazy(() => import('@/pages/CallHistory'));
 const CallDetails = React.lazy(() => import('@/pages/CallDetails'));
+const StaffDashboard = React.lazy(() => import('@/pages/StaffDashboard'));
 
 // Loading fallback
 const LoadingFallback = () => (
@@ -46,6 +47,7 @@ function Router() {
         <Route path="/call-history" component={CallHistory} />
         <Route path="/call-details/:callId" component={CallDetails} />
         <Route path="/email-test" component={EmailTestPage} />
+        <Route path="/staff" component={StaffDashboard} />
         <Route path="/" component={VoiceAssistant} />
         <Route component={NotFound} />
       </Switch>
