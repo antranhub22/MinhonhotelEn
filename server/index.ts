@@ -10,7 +10,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 app.use(cors({
-  origin: '*', // Có thể thay bằng domain frontend cụ thể nếu muốn bảo mật hơn
+  origin: 'https://minhonhotel1.onrender.com',
   credentials: true
 }));
 
