@@ -26,16 +26,26 @@ const StaffRequestManager: React.FC = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string>("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [loginError, setLoginError] = useState<string>("");
 
-  // Xử lý đăng nhập đơn giản
-  const handleLogin = (e: React.FormEvent) => {
+  // Đăng nhập staff và lấy token từ backend
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (username === 'Staff' && password === '1234') {
-      setToken(FAKE_TOKEN);
-      setIsLoggedIn(true);
-      setError("");
-    } else {
-      setError('Sai username hoặc password!');
+    setLoginError("");
+    try {
+      const res = await fetch('/api/staff/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      const data = await res.json();
+      if (res.ok && data.token) {
+        setToken(data.token);
+      } else {
+        setLoginError(data.message || 'Đăng nhập thất bại');
+      }
+    } catch (err) {
+      setLoginError('Lỗi kết nối server');
     }
   };
 
@@ -77,75 +87,76 @@ const StaffRequestManager: React.FC = () => {
     );
   };
 
+  if (!token) {
+    return (
+      <div style={{ maxWidth: 320, margin: '40px auto', padding: 24, border: '1px solid #eee', borderRadius: 8 }}>
+        <h2>Đăng nhập nhân viên</h2>
+        <form onSubmit={handleLogin}>
+          <div style={{ marginBottom: 12 }}>
+            <input type="text" placeholder="Username" value={username} onChange={e => setUsername(e.target.value)} style={{ width: '100%', padding: 8 }} />
+          </div>
+          <div style={{ marginBottom: 12 }}>
+            <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} style={{ width: '100%', padding: 8 }} />
+          </div>
+          {loginError && <div style={{ color: 'red', marginBottom: 8 }}>{loginError}</div>}
+          <button type="submit" style={{ width: '100%', padding: 10, background: '#1e40af', color: '#fff', border: 'none', borderRadius: 4 }}>Đăng nhập</button>
+        </form>
+      </div>
+    );
+  }
+
   return (
     <div style={{ maxWidth: 900, margin: '40px auto', background: '#fff', borderRadius: 12, boxShadow: '0 2px 8px #0001', padding: 24 }}>
       <h2 style={{ fontSize: 24, fontWeight: 700, marginBottom: 24 }}>Quản lý yêu cầu khách hàng</h2>
-      {!isLoggedIn ? (
-        <form onSubmit={handleLogin} style={{ marginBottom: 32 }}>
-          <div style={{ marginBottom: 12 }}>
-            <label style={{ fontWeight: 500, marginRight: 8 }}>Username:</label>
-            <input type="text" value={username} onChange={e => setUsername(e.target.value)} style={{ width: 180, padding: 6, borderRadius: 6, border: '1px solid #ccc' }} />
-          </div>
-          <div style={{ marginBottom: 12 }}>
-            <label style={{ fontWeight: 500, marginRight: 8 }}>Password:</label>
-            <input type="password" value={password} onChange={e => setPassword(e.target.value)} style={{ width: 180, padding: 6, borderRadius: 6, border: '1px solid #ccc' }} />
-          </div>
-          <button type="submit" style={{ padding: '8px 24px', borderRadius: 6, background: '#2563eb', color: '#fff', fontWeight: 600, border: 'none' }}>Đăng nhập</button>
-          {error && <div style={{ color: 'red', marginTop: 12 }}>{error}</div>}
-        </form>
+      <div style={{ marginBottom: 20 }}>
+        <label style={{ fontWeight: 500, marginRight: 8 }}>Token đăng nhập (JWT):</label>
+        <input
+          type="text"
+          value={token}
+          readOnly
+          style={{ width: 350, padding: 6, borderRadius: 6, border: '1px solid #ccc', background: '#f3f3f3' }}
+        />
+      </div>
+      {loading ? (
+        <div>Đang tải dữ liệu...</div>
       ) : (
-        <>
-          <div style={{ marginBottom: 20 }}>
-            <label style={{ fontWeight: 500, marginRight: 8 }}>Token đăng nhập (JWT):</label>
-            <input
-              type="text"
-              value={token}
-              readOnly
-              style={{ width: 350, padding: 6, borderRadius: 6, border: '1px solid #ccc', background: '#f3f3f3' }}
-            />
-          </div>
-          {loading ? (
-            <div>Đang tải dữ liệu...</div>
-          ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ background: '#f5f5f5' }}>
-                  <th style={{ padding: 8, border: '1px solid #eee' }}>Số phòng</th>
-                  <th style={{ padding: 8, border: '1px solid #eee' }}>Khách</th>
-                  <th style={{ padding: 8, border: '1px solid #eee' }}>Nội dung</th>
-                  <th style={{ padding: 8, border: '1px solid #eee' }}>Thời gian</th>
-                  <th style={{ padding: 8, border: '1px solid #eee' }}>Trạng thái</th>
-                  <th style={{ padding: 8, border: '1px solid #eee' }}>Cập nhật</th>
-                </tr>
-              </thead>
-              <tbody>
-                {requests.map(req => (
-                  <tr key={req.id}>
-                    <td style={{ padding: 8, border: '1px solid #eee', textAlign: 'center' }}>{req.roomNumber}</td>
-                    <td style={{ padding: 8, border: '1px solid #eee' }}>{req.guestName}</td>
-                    <td style={{ padding: 8, border: '1px solid #eee' }}>{req.content}</td>
-                    <td style={{ padding: 8, border: '1px solid #eee', textAlign: 'center' }}>{new Date(req.createdAt).toLocaleString()}</td>
-                    <td style={{ padding: 8, border: '1px solid #eee', textAlign: 'center', fontWeight: 600 }}>
-                      {STATUS_OPTIONS.find(opt => opt.value === req.status)?.label || req.status}
-                    </td>
-                    <td style={{ padding: 8, border: '1px solid #eee', textAlign: 'center' }}>
-                      <select
-                        value={req.status}
-                        onChange={e => handleStatusChange(req.id, e.target.value)}
-                        style={{ padding: 4, borderRadius: 6 }}
-                        disabled={!token}
-                      >
-                        {STATUS_OPTIONS.map(opt => (
-                          <option key={opt.value} value={opt.value}>{opt.label}</option>
-                        ))}
-                      </select>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </>
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr style={{ background: '#f5f5f5' }}>
+              <th style={{ padding: 8, border: '1px solid #eee' }}>Số phòng</th>
+              <th style={{ padding: 8, border: '1px solid #eee' }}>Khách</th>
+              <th style={{ padding: 8, border: '1px solid #eee' }}>Nội dung</th>
+              <th style={{ padding: 8, border: '1px solid #eee' }}>Thời gian</th>
+              <th style={{ padding: 8, border: '1px solid #eee' }}>Trạng thái</th>
+              <th style={{ padding: 8, border: '1px solid #eee' }}>Cập nhật</th>
+            </tr>
+          </thead>
+          <tbody>
+            {requests.map(req => (
+              <tr key={req.id}>
+                <td style={{ padding: 8, border: '1px solid #eee', textAlign: 'center' }}>{req.roomNumber}</td>
+                <td style={{ padding: 8, border: '1px solid #eee' }}>{req.guestName}</td>
+                <td style={{ padding: 8, border: '1px solid #eee' }}>{req.content}</td>
+                <td style={{ padding: 8, border: '1px solid #eee', textAlign: 'center' }}>{new Date(req.createdAt).toLocaleString()}</td>
+                <td style={{ padding: 8, border: '1px solid #eee', textAlign: 'center', fontWeight: 600 }}>
+                  {STATUS_OPTIONS.find(opt => opt.value === req.status)?.label || req.status}
+                </td>
+                <td style={{ padding: 8, border: '1px solid #eee', textAlign: 'center' }}>
+                  <select
+                    value={req.status}
+                    onChange={e => handleStatusChange(req.id, e.target.value)}
+                    style={{ padding: 4, borderRadius: 6 }}
+                    disabled={!token}
+                  >
+                    {STATUS_OPTIONS.map(opt => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       )}
     </div>
   );
