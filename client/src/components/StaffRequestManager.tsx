@@ -16,10 +16,28 @@ interface Request {
   status: string;
 }
 
+const FAKE_TOKEN = 'staff-demo-token';
+
 const StaffRequestManager: React.FC = () => {
   const [requests, setRequests] = useState<Request[]>([]);
   const [loading, setLoading] = useState(false);
   const [token, setToken] = useState<string>("");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string>("");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // Xử lý đăng nhập đơn giản
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (username === 'Staff' && password === '1234') {
+      setToken(FAKE_TOKEN);
+      setIsLoggedIn(true);
+      setError("");
+    } else {
+      setError('Sai username hoặc password!');
+    }
+  };
 
   // Lấy danh sách yêu cầu từ API
   useEffect(() => {
@@ -54,57 +72,72 @@ const StaffRequestManager: React.FC = () => {
   return (
     <div style={{ maxWidth: 900, margin: '40px auto', background: '#fff', borderRadius: 12, boxShadow: '0 2px 8px #0001', padding: 24 }}>
       <h2 style={{ fontSize: 24, fontWeight: 700, marginBottom: 24 }}>Quản lý yêu cầu khách hàng</h2>
-      <div style={{ marginBottom: 20 }}>
-        <label style={{ fontWeight: 500, marginRight: 8 }}>Nhập token đăng nhập (JWT):</label>
-        <input
-          type="text"
-          value={token}
-          onChange={e => setToken(e.target.value)}
-          style={{ width: 350, padding: 6, borderRadius: 6, border: '1px solid #ccc' }}
-          placeholder="Dán token vào đây để truy cập API"
-        />
-      </div>
-      {(!token) && <div style={{ color: 'red', marginBottom: 16 }}>Vui lòng nhập token để xem và cập nhật yêu cầu!</div>}
-      {loading ? (
-        <div>Đang tải dữ liệu...</div>
+      {!isLoggedIn ? (
+        <form onSubmit={handleLogin} style={{ marginBottom: 32 }}>
+          <div style={{ marginBottom: 12 }}>
+            <label style={{ fontWeight: 500, marginRight: 8 }}>Username:</label>
+            <input type="text" value={username} onChange={e => setUsername(e.target.value)} style={{ width: 180, padding: 6, borderRadius: 6, border: '1px solid #ccc' }} />
+          </div>
+          <div style={{ marginBottom: 12 }}>
+            <label style={{ fontWeight: 500, marginRight: 8 }}>Password:</label>
+            <input type="password" value={password} onChange={e => setPassword(e.target.value)} style={{ width: 180, padding: 6, borderRadius: 6, border: '1px solid #ccc' }} />
+          </div>
+          <button type="submit" style={{ padding: '8px 24px', borderRadius: 6, background: '#2563eb', color: '#fff', fontWeight: 600, border: 'none' }}>Đăng nhập</button>
+          {error && <div style={{ color: 'red', marginTop: 12 }}>{error}</div>}
+        </form>
       ) : (
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <thead>
-            <tr style={{ background: '#f5f5f5' }}>
-              <th style={{ padding: 8, border: '1px solid #eee' }}>Số phòng</th>
-              <th style={{ padding: 8, border: '1px solid #eee' }}>Khách</th>
-              <th style={{ padding: 8, border: '1px solid #eee' }}>Nội dung</th>
-              <th style={{ padding: 8, border: '1px solid #eee' }}>Thời gian</th>
-              <th style={{ padding: 8, border: '1px solid #eee' }}>Trạng thái</th>
-              <th style={{ padding: 8, border: '1px solid #eee' }}>Cập nhật</th>
-            </tr>
-          </thead>
-          <tbody>
-            {requests.map(req => (
-              <tr key={req.id}>
-                <td style={{ padding: 8, border: '1px solid #eee', textAlign: 'center' }}>{req.roomNumber}</td>
-                <td style={{ padding: 8, border: '1px solid #eee' }}>{req.guestName}</td>
-                <td style={{ padding: 8, border: '1px solid #eee' }}>{req.content}</td>
-                <td style={{ padding: 8, border: '1px solid #eee', textAlign: 'center' }}>{new Date(req.createdAt).toLocaleString()}</td>
-                <td style={{ padding: 8, border: '1px solid #eee', textAlign: 'center', fontWeight: 600 }}>
-                  {STATUS_OPTIONS.find(opt => opt.value === req.status)?.label || req.status}
-                </td>
-                <td style={{ padding: 8, border: '1px solid #eee', textAlign: 'center' }}>
-                  <select
-                    value={req.status}
-                    onChange={e => handleStatusChange(req.id, e.target.value)}
-                    style={{ padding: 4, borderRadius: 6 }}
-                    disabled={!token}
-                  >
-                    {STATUS_OPTIONS.map(opt => (
-                      <option key={opt.value} value={opt.value}>{opt.label}</option>
-                    ))}
-                  </select>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <>
+          <div style={{ marginBottom: 20 }}>
+            <label style={{ fontWeight: 500, marginRight: 8 }}>Token đăng nhập (JWT):</label>
+            <input
+              type="text"
+              value={token}
+              readOnly
+              style={{ width: 350, padding: 6, borderRadius: 6, border: '1px solid #ccc', background: '#f3f3f3' }}
+            />
+          </div>
+          {loading ? (
+            <div>Đang tải dữ liệu...</div>
+          ) : (
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ background: '#f5f5f5' }}>
+                  <th style={{ padding: 8, border: '1px solid #eee' }}>Số phòng</th>
+                  <th style={{ padding: 8, border: '1px solid #eee' }}>Khách</th>
+                  <th style={{ padding: 8, border: '1px solid #eee' }}>Nội dung</th>
+                  <th style={{ padding: 8, border: '1px solid #eee' }}>Thời gian</th>
+                  <th style={{ padding: 8, border: '1px solid #eee' }}>Trạng thái</th>
+                  <th style={{ padding: 8, border: '1px solid #eee' }}>Cập nhật</th>
+                </tr>
+              </thead>
+              <tbody>
+                {requests.map(req => (
+                  <tr key={req.id}>
+                    <td style={{ padding: 8, border: '1px solid #eee', textAlign: 'center' }}>{req.roomNumber}</td>
+                    <td style={{ padding: 8, border: '1px solid #eee' }}>{req.guestName}</td>
+                    <td style={{ padding: 8, border: '1px solid #eee' }}>{req.content}</td>
+                    <td style={{ padding: 8, border: '1px solid #eee', textAlign: 'center' }}>{new Date(req.createdAt).toLocaleString()}</td>
+                    <td style={{ padding: 8, border: '1px solid #eee', textAlign: 'center', fontWeight: 600 }}>
+                      {STATUS_OPTIONS.find(opt => opt.value === req.status)?.label || req.status}
+                    </td>
+                    <td style={{ padding: 8, border: '1px solid #eee', textAlign: 'center' }}>
+                      <select
+                        value={req.status}
+                        onChange={e => handleStatusChange(req.id, e.target.value)}
+                        style={{ padding: 4, borderRadius: 6 }}
+                        disabled={!token}
+                      >
+                        {STATUS_OPTIONS.map(opt => (
+                          <option key={opt.value} value={opt.value}>{opt.label}</option>
+                        ))}
+                      </select>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </>
       )}
     </div>
   );
