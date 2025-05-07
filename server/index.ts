@@ -24,7 +24,15 @@ app.use((req, res, next) => {
     capturedJsonResponse = bodyJson;
     return originalResJson.apply(res, [bodyJson, ...args]);
   };
-
+  app.get('/api/test-orders-2', async (req, res) => {
+    try {
+      const { db } = require('./db');
+      const result = await db.select().from(require('../shared/schema').orders);
+      res.json({ success: true, orders: result });
+    } catch (err) {
+      res.status(500).json({ success: false, error: (err as any)?.message || String(err), stack: (err as any)?.stack });
+    }
+  });
   res.on("finish", () => {
     const duration = Date.now() - start;
     if (path.startsWith("/api")) {
