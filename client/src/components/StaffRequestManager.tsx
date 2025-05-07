@@ -17,6 +17,7 @@ interface Request {
 }
 
 const FAKE_TOKEN = 'staff-demo-token';
+const API_BASE = 'https://minhonhotel1.onrender.com';
 
 const StaffRequestManager: React.FC = () => {
   const [requests, setRequests] = useState<Request[]>([]);
@@ -33,7 +34,7 @@ const StaffRequestManager: React.FC = () => {
     e.preventDefault();
     setLoginError("");
     try {
-      const res = await fetch('/api/staff/login', {
+      const res = await fetch(`${API_BASE}/api/staff/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
@@ -54,7 +55,7 @@ const StaffRequestManager: React.FC = () => {
     if (!token) return;
     const fetchRequests = async () => {
       setLoading(true);
-      const res = await fetch('/api/staff/orders', {
+      const res = await fetch(`${API_BASE}/api/staff/orders`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await res.json();
@@ -75,7 +76,7 @@ const StaffRequestManager: React.FC = () => {
   // Hàm cập nhật trạng thái
   const handleStatusChange = async (id: string, newStatus: string) => {
     if (!token) return;
-    await fetch(`/api/orders/${id}/status`, {
+    await fetch(`${API_BASE}/api/orders/${id}/status`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
       body: JSON.stringify({ status: newStatus }),
