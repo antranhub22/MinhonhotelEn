@@ -3,6 +3,7 @@ import { useAssistant } from '@/context/AssistantContext';
 import { ServiceRequest } from '@/types';
 import hotelImage from '../assets/hotel-exterior.jpeg';
 import InfographicSteps from './InfographicSteps';
+import { parseSummaryToOrderDetails, extractRoomNumber } from '@/lib/summaryParser';
 
 interface Interface3Props {
   isActive: boolean;
@@ -225,8 +226,7 @@ const Interface3: React.FC<Interface3Props> = ({ isActive }) => {
           }).join(',');
           
           // Look for room number in the summary
-          const roomMatch = content.match(/Room Number:?\s*(\d+)/i);
-          const roomNumber = roomMatch ? roomMatch[1] : orderSummary.roomNumber;
+          const roomNumber = extractRoomNumber(content) || orderSummary.roomNumber;
           
           // Look for overall timing
           const timingMatch = content.match(/Service Timing Requested:?\s*([^\n]+)/i);

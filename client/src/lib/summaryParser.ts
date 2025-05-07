@@ -79,7 +79,7 @@ const serviceCategoryMapping: Record<string, string> = {
 /**
  * Extract room number from summary text
  */
-function extractRoomNumber(summary: string): string | null {
+export function extractRoomNumber(summary: string): string | null {
   const match = summary.match(PATTERNS.roomNumber);
   
   // If we got a match, check which capturing group has the value
