@@ -48,7 +48,15 @@ const StaffRequestManager: React.FC = () => {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await res.json();
-      setRequests(data);
+      let orders: any[] = [];
+      if (Array.isArray(data)) {
+        orders = data;
+      } else if (Array.isArray(data.orders)) {
+        orders = data.orders;
+      } else if (Array.isArray(data.data)) {
+        orders = data.data;
+      }
+      setRequests(orders);
       setLoading(false);
     };
     fetchRequests();
