@@ -419,9 +419,14 @@ const Interface3: React.FC<Interface3Props> = ({ isActive }) => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          roomNumber: orderSummary.roomNumber,
-          guestName: orderSummary.guestName,
-          content: orderSummary.items.map(item => item.description).join(', '),
+          callId: orderSummary.callId || `call-${Date.now()}`,
+          orderType: orderSummary.orderType || 'other',
+          deliveryTime: orderSummary.deliveryTime || 'asap',
+          items: orderSummary.items || [],
+          totalAmount: orderSummary.totalAmount || 0,
+          roomNumber: orderSummary.roomNumber || '',
+          guestName: orderSummary.guestName && orderSummary.guestName.trim() !== '' ? orderSummary.guestName : 'Guest',
+          content: orderSummary.items ? orderSummary.items.map((item: any) => item.description).join(', ') : '',
           status: 'pending',
           orderReference: orderReference,
           createdAt: new Date().toISOString()
