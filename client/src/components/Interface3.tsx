@@ -413,6 +413,25 @@ const Interface3: React.FC<Interface3Props> = ({ isActive }) => {
       console.log('Vietnamese interface is active, skipping email send from English interface');
     }
     
+    // Gửi order vào database
+    try {
+      await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          roomNumber: orderSummary.roomNumber,
+          guestName: orderSummary.guestName,
+          content: orderSummary.items.map(item => item.description).join(', '),
+          status: 'pending',
+          orderReference: orderReference,
+          createdAt: new Date().toISOString()
+        })
+      });
+      console.log('Order đã được lưu vào database');
+    } catch (err) {
+      console.error('Lỗi khi lưu order vào database:', err);
+    }
+    
     // Navigate to confirmation screen
     setCurrentInterface('interface4');
   };
