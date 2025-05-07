@@ -415,7 +415,7 @@ const Interface3: React.FC<Interface3Props> = ({ isActive }) => {
     
     // Gửi order vào database
     try {
-      await fetch('/api/orders', {
+      await fetch('https://minhonhotel1.onrender.com/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
