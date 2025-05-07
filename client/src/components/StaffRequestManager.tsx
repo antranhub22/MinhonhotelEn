@@ -19,24 +19,29 @@ interface Request {
 const StaffRequestManager: React.FC = () => {
   const [requests, setRequests] = useState<Request[]>([]);
   const [loading, setLoading] = useState(false);
+  const [token, setToken] = useState<string>("");
 
   // Lấy danh sách yêu cầu từ API
   useEffect(() => {
+    if (!token) return;
     const fetchRequests = async () => {
       setLoading(true);
-      const res = await fetch('/api/requests');
+      const res = await fetch('/api/staff/orders', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
       const data = await res.json();
       setRequests(data);
       setLoading(false);
     };
     fetchRequests();
-  }, []);
+  }, [token]);
 
   // Hàm cập nhật trạng thái
   const handleStatusChange = async (id: string, newStatus: string) => {
-    await fetch(`/api/requests/${id}/status`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+    if (!token) return;
+    await fetch(`/api/orders/${id}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
       body: JSON.stringify({ status: newStatus }),
     });
     setRequests(prev =>
@@ -49,6 +54,17 @@ const StaffRequestManager: React.FC = () => {
   return (
     <div style={{ maxWidth: 900, margin: '40px auto', background: '#fff', borderRadius: 12, boxShadow: '0 2px 8px #0001', padding: 24 }}>
       <h2 style={{ fontSize: 24, fontWeight: 700, marginBottom: 24 }}>Quản lý yêu cầu khách hàng</h2>
+      <div style={{ marginBottom: 20 }}>
+        <label style={{ fontWeight: 500, marginRight: 8 }}>Nhập token đăng nhập (JWT):</label>
+        <input
+          type="text"
+          value={token}
+          onChange={e => setToken(e.target.value)}
+          style={{ width: 350, padding: 6, borderRadius: 6, border: '1px solid #ccc' }}
+          placeholder="Dán token vào đây để truy cập API"
+        />
+      </div>
+      {(!token) && <div style={{ color: 'red', marginBottom: 16 }}>Vui lòng nhập token để xem và cập nhật yêu cầu!</div>}
       {loading ? (
         <div>Đang tải dữ liệu...</div>
       ) : (
@@ -78,6 +94,7 @@ const StaffRequestManager: React.FC = () => {
                     value={req.status}
                     onChange={e => handleStatusChange(req.id, e.target.value)}
                     style={{ padding: 4, borderRadius: 6 }}
+                    disabled={!token}
                   >
                     {STATUS_OPTIONS.map(opt => (
                       <option key={opt.value} value={opt.value}>{opt.label}</option>
