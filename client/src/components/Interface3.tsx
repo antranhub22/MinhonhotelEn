@@ -139,121 +139,132 @@ const Interface3: React.FC<Interface3Props> = ({ isActive }) => {
   
   // Legacy function to analyze call summary and prepare request items
   useEffect(() => {
-    if (isActive && callSummary && orderSummary && (!serviceRequests || serviceRequests.length === 0)) {
+    if (isActive && callSummary && orderSummary) {
       // Extract requests from summary content
       const content = callSummary.content;
-      
-      // Try to find "List of Requests:" section and extract individual requests
-      const requestsMatch = content.match(/List of Requests:([\s\S]*?)(?:\n\nSpecial Instructions|\n\nThe conversation)/);
-      
-      if (requestsMatch) {
-        const requestsSection = requestsMatch[1];
-        const requestRegex = /Request (\d+): ([^\n]+)/g;
-        
-        let match;
-        const newItems = [];
-        let id = 1;
-        
-        // Extract all detected service requests
-        while ((match = requestRegex.exec(requestsSection)) !== null) {
-          const requestType = match[2].trim();
-          const requestIndex = match.index;
-          const endIndex = requestsSection.indexOf(`Request ${parseInt(match[1]) + 1}:`, requestIndex);
+
+      // Luôn cập nhật số phòng nếu phát hiện được
+      const detectedRoomNumber = extractRoomNumber(content);
+      if (detectedRoomNumber && detectedRoomNumber !== orderSummary.roomNumber) {
+        setOrderSummary({
+          ...orderSummary,
+          roomNumber: detectedRoomNumber
+        });
+      }
+
+      // Phần còn lại giữ nguyên logic cũ cho items
+      if (!serviceRequests || serviceRequests.length === 0) {
+        // Try to find "List of Requests:" section and extract individual requests
+        const requestsMatch = content.match(/List of Requests:([\s\S]*?)(?:\n\nSpecial Instructions|\n\nThe conversation)/);
+        if (requestsMatch) {
+          const requestsSection = requestsMatch[1];
+          const requestRegex = /Request (\d+): ([^\n]+)/g;
           
-          // Extract the details section for this request
-          const detailsSection = endIndex > -1 
-            ? requestsSection.substring(requestIndex, endIndex)
-            : requestsSection.substring(requestIndex);
+          let match;
+          const newItems = [];
+          let id = 1;
           
-          // Parse specific details
-          const detailsRegex = /- ([^:]+): ([^\n]+)/g;
-          let detailsMatch;
-          const details: Record<string, string> = {};
-          
-          while ((detailsMatch = detailsRegex.exec(detailsSection)) !== null) {
-            const key = detailsMatch[1].trim();
-            const value = detailsMatch[2].trim();
-            details[key.toLowerCase()] = value;
-          }
-          
-          // Construct comprehensive description including all details
-          let description = '';
-          
-          if (details['service description']) {
-            description += `${details['service description']}`;
-          }
-          
-          if (details['details']) {
-            description += description ? `. ${details['details']}` : details['details'];
-          }
-          
-          if (details['items']) {
-            description += description ? `\nItems: ${details['items']}` : `Items: ${details['items']}`;
-          }
-          
-          if (details['service timing requested']) {
-            description += `\nTiming: ${details['service timing requested']}`;
-          }
-          
-          if (details['destinations']) {
-            description += `\nDestinations: ${details['destinations']}`;
-          }
-          
-          // If no details were extracted, provide a default description
-          if (!description) {
-            description = `Requested ${requestType} service`;
-          }
-          
-          newItems.push({
-            id: id.toString(),
-            name: requestType,
-            description: description,
-            quantity: 1,
-            price: 10 // Default price
-          });
-          
-          id++;
-        }
-        
-        // If we found at least one request and we don't already have items,
-        // update the orderSummary with the new items
-        if (newItems.length > 0 && (!orderSummary.items || orderSummary.items.length === 0)) {
-          // Create a comma-separated list of service types
-          const serviceTypes = newItems.map(item => {
-            // Convert service name to service type value
-            const serviceType = item.name.toLowerCase().replace(/\s+/g, '-');
-            return serviceType;
-          }).join(',');
-          
-          // Look for room number in the summary
-          const roomNumber = extractRoomNumber(content) || orderSummary.roomNumber;
-          
-          // Look for overall timing
-          const timingMatch = content.match(/Service Timing Requested:?\s*([^\n]+)/i);
-          const timing = timingMatch ? timingMatch[1] : orderSummary.deliveryTime;
-          
-          // Map the timing description to our delivery time options
-          let deliveryTime = orderSummary.deliveryTime;
-          if (timing) {
-            if (/soon|immediate|urgent|right now/i.test(timing)) {
-              deliveryTime = 'asap';
-            } else if (/30 minute|half hour/i.test(timing)) {
-              deliveryTime = '30min';
-            } else if (/hour|60 minute/i.test(timing)) {
-              deliveryTime = '1hour';
-            } else if (/schedule|later|specific/i.test(timing)) {
-              deliveryTime = 'specific';
+          // Extract all detected service requests
+          while ((match = requestRegex.exec(requestsSection)) !== null) {
+            const requestType = match[2].trim();
+            const requestIndex = match.index;
+            const endIndex = requestsSection.indexOf(`Request ${parseInt(match[1]) + 1}:`, requestIndex);
+            
+            // Extract the details section for this request
+            const detailsSection = endIndex > -1 
+              ? requestsSection.substring(requestIndex, endIndex)
+              : requestsSection.substring(requestIndex);
+            
+            // Parse specific details
+            const detailsRegex = /- ([^:]+): ([^\n]+)/g;
+            let detailsMatch;
+            const details: Record<string, string> = {};
+            
+            while ((detailsMatch = detailsRegex.exec(detailsSection)) !== null) {
+              const key = detailsMatch[1].trim();
+              const value = detailsMatch[2].trim();
+              details[key.toLowerCase()] = value;
             }
+            
+            // Construct comprehensive description including all details
+            let description = '';
+            
+            if (details['service description']) {
+              description += `${details['service description']}`;
+            }
+            
+            if (details['details']) {
+              description += description ? `. ${details['details']}` : details['details'];
+            }
+            
+            if (details['items']) {
+              description += description ? `\nItems: ${details['items']}` : `Items: ${details['items']}`;
+            }
+            
+            if (details['service timing requested']) {
+              description += `\nTiming: ${details['service timing requested']}`;
+            }
+            
+            if (details['destinations']) {
+              description += `\nDestinations: ${details['destinations']}`;
+            }
+            
+            // If no details were extracted, provide a default description
+            if (!description) {
+              description = `Requested ${requestType} service`;
+            }
+            
+            newItems.push({
+              id: id.toString(),
+              name: requestType,
+              description: description,
+              quantity: 1,
+              price: 10 // Default price
+            });
+            
+            id++;
           }
           
-          setOrderSummary({
-            ...orderSummary,
-            items: newItems,
-            orderType: serviceTypes,
-            roomNumber: roomNumber,
-            deliveryTime: deliveryTime,
-            totalAmount: newItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)
-          });
+          // If we found at least one request and we don't already have items,
+          // update the orderSummary with the new items
+          if (newItems.length > 0 && (!orderSummary.items || orderSummary.items.length === 0)) {
+            // Create a comma-separated list of service types
+            const serviceTypes = newItems.map(item => {
+              // Convert service name to service type value
+              const serviceType = item.name.toLowerCase().replace(/\s+/g, '-');
+              return serviceType;
+            }).join(',');
+            
+            // Look for room number in the summary
+            const roomNumber = extractRoomNumber(content) || orderSummary.roomNumber;
+            
+            // Look for overall timing
+            const timingMatch = content.match(/Service Timing Requested:?\s*([^\n]+)/i);
+            const timing = timingMatch ? timingMatch[1] : orderSummary.deliveryTime;
+            
+            // Map the timing description to our delivery time options
+            let deliveryTime = orderSummary.deliveryTime;
+            if (timing) {
+              if (/soon|immediate|urgent|right now/i.test(timing)) {
+                deliveryTime = 'asap';
+              } else if (/30 minute|half hour/i.test(timing)) {
+                deliveryTime = '30min';
+              } else if (/hour|60 minute/i.test(timing)) {
+                deliveryTime = '1hour';
+              } else if (/schedule|later|specific/i.test(timing)) {
+                deliveryTime = 'specific';
+              }
+            }
+            
+            setOrderSummary({
+              ...orderSummary,
+              items: newItems,
+              orderType: serviceTypes,
+              roomNumber: roomNumber,
+              deliveryTime: deliveryTime,
+              totalAmount: newItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+            });
+          }
         }
       }
     }
